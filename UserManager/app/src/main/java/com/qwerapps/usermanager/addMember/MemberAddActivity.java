@@ -1,4 +1,4 @@
-package com.qwerapps.usermanager;
+package com.qwerapps.usermanager.addMember;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,9 +17,11 @@ import android.widget.TextView;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
+import com.qwerapps.usermanager.R;
 import com.qwerapps.usermanager.data.AdminDetails;
 import com.qwerapps.usermanager.data.DatabaseHelper;
 import com.qwerapps.usermanager.data.MemberDetails;
+import com.qwerapps.usermanager.members.ViewMemberRecordActivity;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -28,7 +30,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MemberAddActivity extends AppCompatActivity implements View.OnClickListener{
+public class MemberAddActivity extends AppCompatActivity implements View.OnClickListener, MemberAddContract.View{
 
     private DatabaseHelper databaseHelper = null;
 
@@ -45,23 +47,18 @@ public class MemberAddActivity extends AppCompatActivity implements View.OnClick
 
     private List<AdminDetails> adminList;
 
+    private MemberAddPresenter memberAddPresenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_member_add);
 
         ButterKnife.bind(this);
-        try
-        {
-            final Dao<AdminDetails, Integer> adminDao = getHelper().getAdminDao();
-            adminList = adminDao.queryForAll();
 
-            admin_sp.setAdapter(new CustomAdapter(this,android.R.layout.simple_spinner_item, android.R.layout.simple_spinner_dropdown_item, adminList ));
-        }
-        catch(SQLException e)
-        {
-            e.printStackTrace();
-        }
+        memberAddPresenter = new MemberAddPresenter(getHelper(), this);
+
+        admin_sp.setAdapter(new CustomAdapter(this,android.R.layout.simple_spinner_item, android.R.layout.simple_spinner_dropdown_item, memberAddPresenter.getAdminList() ));
 
         reset_btn.setOnClickListener(this);
         submit_btn.setOnClickListener(this);
@@ -96,7 +93,7 @@ public class MemberAddActivity extends AppCompatActivity implements View.OnClick
     {
         if(v == submit_btn)
         {
-            if(adminList.size() > 0)
+            if(memberAddPresenter.getAdminList().size() > 0)
             {
                 if(member_name_et.getText().toString().trim().length() > 0 &&
                         address_et.getText().toString().trim().length() >0)
@@ -108,17 +105,9 @@ public class MemberAddActivity extends AppCompatActivity implements View.OnClick
 
                     memDetails.admin = (AdminDetails) admin_sp.getSelectedItem();
 
-                    try
-                    {
-                        final Dao<MemberDetails,Integer> memberDao = getHelper().getMemberDao();
-                        memberDao.create(memDetails);
-                        reset();
-                        showDialog();
-                    }
-                    catch(SQLException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    memberAddPresenter.addMember(memDetails);
+                    resetInput();
+                    memberAdded();
                 }
                 else
                 {
@@ -133,7 +122,7 @@ public class MemberAddActivity extends AppCompatActivity implements View.OnClick
         }
         else if(v == reset_btn)
         {
-            reset();
+            resetInput();
         }
     }
 
@@ -145,19 +134,27 @@ public class MemberAddActivity extends AppCompatActivity implements View.OnClick
         alertDialog.show();
     }
 
-    private void reset()
-    {
+
+    @Override
+    public void resetInput() {
         member_name_et.setText("");
         address_et.setText("");
     }
 
-    private void showDialog()
-    {
+    @Override
+    public void showNewMemberDetail() {
+        final Intent negativeActivity = new Intent(getApplicationContext(), ViewMemberRecordActivity.class);
+        startActivity(negativeActivity);
+        finish();
+    }
+
+    @Override
+    public void memberAdded() {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         alertDialogBuilder.setMessage("Member record added successfully !!");
 
-        alertDialogBuilder.setPositiveButton("Add Mode",
+        alertDialogBuilder.setPositiveButton("Add More",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -169,9 +166,7 @@ public class MemberAddActivity extends AppCompatActivity implements View.OnClick
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        final Intent negativeActivity = new Intent(getApplicationContext(), ViewMemberRecordActivity.class);
-                        startActivity(negativeActivity);
-                        finish();
+                        showNewMemberDetail();
                     }
                 });
 

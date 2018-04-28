@@ -1,7 +1,8 @@
-package com.qwerapps.usermanager;
+package com.qwerapps.usermanager.viewAdminDetails;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -10,6 +11,8 @@ import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.qwerapps.usermanager.R;
+import com.qwerapps.usermanager.addMember.MemberAddContract;
 import com.qwerapps.usermanager.data.AdminDetails;
 import com.qwerapps.usermanager.data.DatabaseHelper;
 import com.qwerapps.usermanager.data.MemberDetails;
@@ -23,7 +26,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class ViewAdminDetailsActivity extends AppCompatActivity implements View.OnClickListener {
+public class ViewAdminDetailsActivity extends AppCompatActivity implements View.OnClickListener, ViewAdminDetailsContract.View {
 
     private DatabaseHelper databaseHelper = null;
 
@@ -41,6 +44,8 @@ public class ViewAdminDetailsActivity extends AppCompatActivity implements View.
 
     private Dao<MemberDetails, Integer> memberDao;
 
+    private ViewAdminDetailsContract.Presenter adminPresenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,37 +55,14 @@ public class ViewAdminDetailsActivity extends AppCompatActivity implements View.
 
         close_btn.setOnClickListener(this);
 
+        adminPresenter = new ViewAdminDetailsPresenter(getHelper(), this);
         final AdminDetails aDetails = (AdminDetails) getIntent().getExtras().getSerializable("details");
+
 
         admin_name_et.setText(aDetails.adminName);
         address_et.setText(aDetails.address);
 
-        final List<String> memberName = new ArrayList<String>();
-
-        try
-        {
-            memberDao = getHelper().getMemberDao();
-
-            final QueryBuilder<MemberDetails, Integer> queryBuilder = memberDao.queryBuilder();
-
-            queryBuilder.where().eq(MemberDetails.ADMIN_ID_FIELD, aDetails.adminId);
-
-            final PreparedQuery<MemberDetails> preparedQuery = queryBuilder.prepare();
-
-            final Iterator<MemberDetails> membersIt = memberDao.query(preparedQuery).iterator();
-
-            while(membersIt.hasNext())
-            {
-                final MemberDetails mDetails = membersIt.next();
-                memberName.add(mDetails.memberName);
-            }
-
-        } catch (SQLException e)
-        {
-            e.printStackTrace();
-        }
-
-        members_et.setText(memberName.toString());
+        members_et.setText(adminPresenter.getMembers(aDetails.adminId));
     }
 
     private DatabaseHelper getHelper()
@@ -111,5 +93,10 @@ public class ViewAdminDetailsActivity extends AppCompatActivity implements View.
         {
             finish();
         }
+    }
+
+    @Override
+    public void showMembers() {
+
     }
 }

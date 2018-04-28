@@ -1,4 +1,4 @@
-package com.qwerapps.usermanager;
+package com.qwerapps.usermanager.addAdmin;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,16 +10,15 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.j256.ormlite.dao.Dao;
+import com.qwerapps.usermanager.R;
+import com.qwerapps.usermanager.viewAdminDetails.ViewAdminDetailsActivity;
 import com.qwerapps.usermanager.data.AdminDetails;
 import com.qwerapps.usermanager.data.DatabaseHelper;
-
-import java.sql.SQLException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class AdminAddActivity extends AppCompatActivity  implements View.OnClickListener{
+public class AdminAddActivity extends AppCompatActivity  implements View.OnClickListener, AdminAddContract.View{
 
     private DatabaseHelper databaseHelper = null;
 
@@ -35,6 +34,8 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
     @BindView(R.id.submit_btn)
     Button submit_btn;
 
+    private AdminAddPresenter adminsPresenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +43,7 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
 
         ButterKnife.bind(this);
 
+        adminsPresenter = new AdminAddPresenter(getHelper(),this);
         reset_btn.setOnClickListener(this);
         submit_btn.setOnClickListener(this);
     }
@@ -81,18 +83,9 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
                 adminDetails.adminName = admin_name_et.getText().toString();
                 adminDetails.address = address_et.getText().toString();
 
-                try
-                {
-                    final Dao<AdminDetails, Integer> adminDao = getHelper().getAdminDao();
-
-                    adminDao.create(adminDetails);
-                    reset();
-                    showDialog(adminDetails);
-                }
-                catch (SQLException e)
-                {
-                    e.printStackTrace();
-                }
+                adminsPresenter.addAdmin(adminDetails);
+                resetInput();
+                adminAdded(adminDetails);
             }
             else
             {
@@ -101,7 +94,7 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
         }
         else if(v == reset_btn)
         {
-            reset();
+            resetInput();
         }
     }
 
@@ -113,14 +106,22 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
         alertDialog.show();
     }
 
-    private void reset()
-    {
+    @Override
+    public void resetInput() {
         admin_name_et.setText("");
         address_et.setText("");
     }
 
-    private void showDialog(final AdminDetails adminDetails)
-    {
+    @Override
+    public void showNewAdminDetail(AdminDetails adminDetails) {
+        Intent negativeActivity = new Intent(getApplicationContext(), ViewAdminDetailsActivity.class);
+        negativeActivity.putExtra("details", adminDetails);
+        startActivity(negativeActivity);
+        finish();
+    }
+
+    @Override
+    public void adminAdded(final AdminDetails adminDetails) {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         alertDialogBuilder.setMessage("Admin record added successfully");
@@ -137,19 +138,12 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        Intent negativeActivity = new Intent(getApplicationContext(), ViewAdminDetailsActivity.class);
-                        negativeActivity.putExtra("details", adminDetails);
-                        startActivity(negativeActivity);
-                        finish();
+                        showNewAdminDetail(adminDetails);
+
                     }
                 });
 
         final AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
-
-
-
-
-
 }

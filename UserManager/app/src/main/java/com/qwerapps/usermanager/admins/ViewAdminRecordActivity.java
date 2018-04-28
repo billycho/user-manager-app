@@ -1,4 +1,4 @@
-package com.qwerapps.usermanager;
+package com.qwerapps.usermanager.admins;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,18 +13,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.j256.ormlite.dao.Dao;
+import com.qwerapps.usermanager.R;
+import com.qwerapps.usermanager.RecordArrayAdapter;
+import com.qwerapps.usermanager.viewAdminDetails.ViewAdminDetailsActivity;
 import com.qwerapps.usermanager.data.AdminDetails;
 import com.qwerapps.usermanager.data.DatabaseHelper;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class ViewAdminRecordActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class ViewAdminRecordActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, AdminsContract.View {
 
     private DatabaseHelper databaseHelper = null;
 
@@ -32,10 +32,7 @@ public class ViewAdminRecordActivity extends AppCompatActivity implements Adapte
     ListView listview;
 
     private int selectedRecordPosition = -1;
-
-    private Dao<AdminDetails, Integer> adminDao;
-
-    private List<AdminDetails> adminList;
+    private AdminsContract.Presenter adminPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,36 +40,22 @@ public class ViewAdminRecordActivity extends AppCompatActivity implements Adapte
         setContentView(R.layout.activity_view_admin_record);
 
         ButterKnife.bind(this);
+
+        adminPresenter = new AdminsPresenter(getHelper(), this);
+        adminPresenter.getAdmins();
+
+
         ((TextView) findViewById(R.id.header_tv)).setText("View Admin Records");
-
-        try
-        {
-            adminDao = getHelper().getAdminDao();
-
-            adminList = adminDao.queryForAll();
-
-            final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View rowView = inflater.inflate(R.layout.list_item, listview, false);
-            ((TextView) rowView.findViewById(R.id.admin_tv)).setText("Address");
-            ((TextView) rowView.findViewById(R.id.member_name_tv)).setText("Admin Name");
-            listview.addHeaderView(rowView);
-
-            listview.setAdapter(new RecordArrayAdapter(this, R.layout.list_item, adminList, adminDao));
-            listview.setOnItemClickListener(this);
-            listview.setOnItemLongClickListener(this);
-
-            populateNoRecordMsg();
-
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View rowView = inflater.inflate(R.layout.list_item, listview, false);
+        ((TextView) rowView.findViewById(R.id.admin_tv)).setText("Address");
+        ((TextView) rowView.findViewById(R.id.member_name_tv)).setText("Admin Name");
+        listview.addHeaderView(rowView);
     }
 
     private void populateNoRecordMsg()
     {
-        if(adminList.size() == 0)
+        if(adminPresenter.isListEmpty())
         {
             final TextView tv = new TextView(this);
             tv.setPadding(5,5,5,5);
@@ -110,9 +93,8 @@ public class ViewAdminRecordActivity extends AppCompatActivity implements Adapte
         if(position > 0)
         {
             selectedRecordPosition = position - 1;
-            final Intent intent = new Intent(this, ViewAdminDetailsActivity.class);
-            intent.putExtra("details", adminList.get(selectedRecordPosition));
-            startActivity(intent);
+            adminPresenter.openAdminDetail(selectedRecordPosition);
+            //showAdminDetail(adminList.get(selectedRecordPosition));
         }
     }
 
@@ -122,13 +104,34 @@ public class ViewAdminRecordActivity extends AppCompatActivity implements Adapte
         if(position > 0)
         {
             selectedRecordPosition = position - 1;
-            showDialog();
+            showDeleteConfirmation();
         }
 
         return true;
     }
 
-    private void showDialog()
+
+
+    @Override
+    public void showAdmins(List<AdminDetails> admins)
+    {
+        try
+        {
+            listview.setAdapter(new RecordArrayAdapter(this, R.layout.list_item, admins, getHelper().getAdminDao()));
+            listview.setOnItemClickListener(this);
+            listview.setOnItemLongClickListener(this);
+
+            populateNoRecordMsg();
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void showDeleteConfirmation()
     {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
@@ -140,9 +143,8 @@ public class ViewAdminRecordActivity extends AppCompatActivity implements Adapte
                     public void onClick(DialogInterface dialogInterface, int i) {
                         try
                         {
-                            adminDao.delete(adminList.get(selectedRecordPosition));
 
-                            adminList.remove(selectedRecordPosition);
+                            adminPresenter.deleteAdmin(selectedRecordPosition);
                             listview.invalidateViews();;
                             selectedRecordPosition = -1;
                             populateNoRecordMsg();
@@ -165,6 +167,13 @@ public class ViewAdminRecordActivity extends AppCompatActivity implements Adapte
 
         final AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
 
+    @Override
+    public void showAdminDetail(AdminDetails adminDetail)
+    {
+        final Intent intent = new Intent(this, ViewAdminDetailsActivity.class);
+        intent.putExtra("details", adminDetail);
+        startActivity(intent);
     }
 }

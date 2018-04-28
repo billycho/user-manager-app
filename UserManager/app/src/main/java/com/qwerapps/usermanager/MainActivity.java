@@ -7,6 +7,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.qwerapps.usermanager.addAdmin.AdminAddActivity;
+import com.qwerapps.usermanager.addMember.MemberAddActivity;
+import com.qwerapps.usermanager.admins.ViewAdminRecordActivity;
+import com.qwerapps.usermanager.members.ViewMemberRecordActivity;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.qwerapps.usermanager.ViewAdminRecordActivity">
+    tools:context=".admins.ViewAdminRecordActivity">
 
     <TextView
         android:id="@+id/header_tv"

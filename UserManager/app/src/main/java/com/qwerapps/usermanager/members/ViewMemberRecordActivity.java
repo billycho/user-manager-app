@@ -1,4 +1,4 @@
-package com.qwerapps.usermanager;
+package com.qwerapps.usermanager.members;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -18,6 +18,8 @@ import android.widget.TextView;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
+import com.qwerapps.usermanager.R;
+import com.qwerapps.usermanager.RecordArrayAdapter;
 import com.qwerapps.usermanager.data.AdminDetails;
 import com.qwerapps.usermanager.data.DatabaseHelper;
 import com.qwerapps.usermanager.data.MemberDetails;
@@ -29,7 +31,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class ViewMemberRecordActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener {
+public class ViewMemberRecordActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener, MembersContract.View {
 
     private DatabaseHelper databaseHelper = null;
 
@@ -43,6 +45,8 @@ public class ViewMemberRecordActivity extends AppCompatActivity implements Adapt
 
     private List<MemberDetails> memberList;
 
+    private MembersContract.Presenter memberPresenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,32 +54,21 @@ public class ViewMemberRecordActivity extends AppCompatActivity implements Adapt
 
         ButterKnife.bind(this);
 
-        try {
-            adminDao = getHelper().getAdminDao();
-            memberDao = getHelper().getMemberDao();
+        memberPresenter = new MembersPresenter(getHelper(),this);
+        memberPresenter.getMembers();
 
-            memberList = memberDao.queryForAll();
 
-            final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View rowView = inflater.inflate(R.layout.list_item, listview, false);
-            listview.addHeaderView(rowView);
+        final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View rowView = inflater.inflate(R.layout.list_item, listview, false);
+        listview.addHeaderView(rowView);
 
-            listview.setAdapter(new RecordArrayAdapter(this, R.layout.list_item, memberList, adminDao));
 
-            listview.setOnItemLongClickListener(this);
-            listview.setOnItemClickListener(this);
 
-            populateNoRecordMsg();
-        }
-        catch(SQLException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     private void populateNoRecordMsg()
     {
-        if(memberList.size()  == 0)
+        if(memberPresenter.isListEmpty())
         {
             final TextView tv = new TextView(this);
             tv.setPadding(5,5,5,5);
@@ -122,14 +115,32 @@ public class ViewMemberRecordActivity extends AppCompatActivity implements Adapt
         if(position > 0)
         {
             selectedRecordPosition = position - 1;
-            showDialog();
+            showDeleteConfirmation();
         }
 
         return true;
     }
 
-    private void showDialog()
-    {
+
+
+    @Override
+    public void showMembers(List<MemberDetails> members) {
+            try
+            {
+                listview.setAdapter(new RecordArrayAdapter(this, R.layout.list_item, members, getHelper().getAdminDao()));
+                listview.setOnItemLongClickListener(this);
+                listview.setOnItemClickListener(this);
+
+                populateNoRecordMsg();
+            } catch (SQLException e)
+            {
+                e.printStackTrace();
+            }
+
+    }
+
+    @Override
+    public void showDeleteConfirmation() {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         alertDialogBuilder.setMessage("Are you really want to delete the selected record ?");
@@ -140,9 +151,7 @@ public class ViewMemberRecordActivity extends AppCompatActivity implements Adapt
                     public void onClick(DialogInterface dialogInterface, int i) {
                         try
                         {
-                            memberDao.delete(memberList.get(selectedRecordPosition));
-
-                            memberList.remove(selectedRecordPosition);
+                            memberPresenter.deleteMember(selectedRecordPosition);
                             listview.invalidateViews();
 
                             selectedRecordPosition = -1;
@@ -167,4 +176,8 @@ public class ViewMemberRecordActivity extends AppCompatActivity implements Adapt
         alertDialog.show();
     }
 
+    @Override
+    public void showMemberDetail(MemberDetails memberDetails) {
+
+    }
 }
