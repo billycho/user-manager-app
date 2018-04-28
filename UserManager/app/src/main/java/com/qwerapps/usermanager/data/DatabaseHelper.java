@@ -71,7 +71,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     {
         if(memberDao == null)
         {
-            memberDao = getDao(Member.class);
+            memberDao = getDao(MemberDetails.class);
         }
 
         return memberDao;

@@ -13,7 +13,7 @@ public class MemberDetails implements Serializable{
     private static final long serialVersionUID = -222864131214757024L;
 
     public static final String ID_FIELD = "member_id";
-    public static final String ADMIN_ID_FIELD = "teacher_id";
+    public static final String ADMIN_ID_FIELD = "admin_id";
 
     @DatabaseField(generatedId = true, columnName =  ID_FIELD)
     public int memberId;

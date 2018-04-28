@@ -8,6 +8,7 @@ fieldName=adminName
 columnName=admin_name
 
 fieldName=address
+columnName=address
 
 dataClass=com.qwerapps.usermanager.data.MemberDetails
 tableName=member_details
@@ -19,6 +20,8 @@ fieldName=memberName
 columnName=member_name
 
 fieldName=address
+columnName=address
+
 fieldName=addedDate
 columnName=added_date
 

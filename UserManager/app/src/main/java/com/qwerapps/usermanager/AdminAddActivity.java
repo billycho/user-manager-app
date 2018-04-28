@@ -24,16 +24,16 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
     private DatabaseHelper databaseHelper = null;
 
     @BindView(R.id.admin_name_et)
-    private EditText admin_name_et;
+    EditText admin_name_et;
 
     @BindView(R.id.address_et)
-    private EditText address_et;
+    EditText address_et;
 
     @BindView(R.id.reset_btn)
-    private Button reset_btn;
+    Button reset_btn;
 
     @BindView(R.id.submit_btn)
-    private Button submit_btn;
+    Button submit_btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +87,7 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
 
                     adminDao.create(adminDetails);
                     reset();
-                    showDialog();
+                    showDialog(adminDetails);
                 }
                 catch (SQLException e)
                 {
@@ -119,7 +119,7 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
         address_et.setText("");
     }
 
-    private void showDialog()
+    private void showDialog(final AdminDetails adminDetails)
     {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
@@ -138,6 +138,7 @@ public class AdminAddActivity extends AppCompatActivity  implements View.OnClick
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Intent negativeActivity = new Intent(getApplicationContext(), ViewAdminDetailsActivity.class);
+                        negativeActivity.putExtra("details", adminDetails);
                         startActivity(negativeActivity);
                         finish();
                     }

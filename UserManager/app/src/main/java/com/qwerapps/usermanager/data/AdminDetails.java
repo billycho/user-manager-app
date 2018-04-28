@@ -18,6 +18,7 @@ public class AdminDetails implements Serializable
     @DatabaseField(columnName = "admin_name")
     public String adminName;
 
+    @DatabaseField(columnName = "address")
     public String address;
 
     public AdminDetails()

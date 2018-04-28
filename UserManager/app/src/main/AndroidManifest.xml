@@ -19,7 +19,8 @@
         <activity android:name=".MemberAddActivity" />
         <activity android:name=".AdminAddActivity" />
         <activity android:name=".ViewMemberRecordActivity" />
-        <activity android:name=".ViewAdminDetailsActivity"></activity>
+        <activity android:name=".ViewAdminDetailsActivity" />
+        <activity android:name=".ViewAdminRecordActivity"></activity>
     </application>
 
 </manifest>
